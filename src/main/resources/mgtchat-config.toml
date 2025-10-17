@@ -1,0 +1,60 @@
+# ================================
+# Configuração do MGT-Chat
+# ================================
+
+[general]
+# Ativar logs de debug do chat
+debug = false
+
+# Prefixo padrão para mensagens globais
+globalPrefix = "&6[Global]"
+
+# Prefixo padrão para mensagens locais
+localPrefix = "&a[Local]"
+
+# Distância máxima (em blocos) para o chat local
+localRange = 100
+
+# Cor padrão para mensagens privadas (/tell)
+tellColor = "&d"
+
+# Permitir uso de cores hexadecimais no chat (ex: &#FFAA00)
+allowHexColors = true
+
+# Permitir uso de códigos de cor & e §
+allowLegacyColors = true
+
+
+[antiSpam]
+# Tempo mínimo entre mensagens (em milissegundos)
+messageDelay = 2000
+
+# Bloquear mensagens repetidas consecutivas
+blockRepeated = true
+
+# Número máximo de mensagens iguais permitidas em sequência
+maxRepeated = 2
+
+
+[filter]
+# Ativar filtro de palavras proibidas
+enabled = true
+
+# Lista de palavras bloqueadas (case-insensitive)
+blockedWords = [
+    "palavrão1",
+    "palavrão2",
+    "palavrão3"
+]
+
+# Mensagem substituta quando palavra bloqueada for detectada
+replacement = "***"
+
+
+[ftbRanks]
+# Ativar integração com FTB Ranks para prefixos
+usePrefixes = true
+
+# Formato da mensagem com prefixo
+# Placeholders: {prefix}, {player}, {message}
+format = "{prefix} {player}: {message}"

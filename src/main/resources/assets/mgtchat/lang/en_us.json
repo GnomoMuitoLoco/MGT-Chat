@@ -1,0 +1,13 @@
+{
+  "itemGroup.mgtchat": "Example Mod Tab",
+  "block.mgtchat.example_block": "Example Block",
+  "item.mgtchat.example_item": "Example Item",
+
+  "mgtchat.configuration.title": "MGTChat Configs",
+  "mgtchat.configuration.section.mgtchat.common.toml": "MGTChat Configs",
+  "mgtchat.configuration.section.mgtchat.common.toml.title": "MGTChat Configs",
+  "mgtchat.configuration.items": "Item List",
+  "mgtchat.configuration.logDirtBlock": "Log Dirt Block",
+  "mgtchat.configuration.magicNumberIntroduction": "Magic Number Text",
+  "mgtchat.configuration.magicNumber": "Magic Number"
+}
