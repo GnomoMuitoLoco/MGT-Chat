@@ -17,10 +17,12 @@ jobs:
           AUTHOR_AVATAR="https://github.com/${AUTHOR}.png"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+          # Lista de commits (hash curto, link, mensagem e autor)
           COMMITS=$(jq -r \
             '.commits[] | "[`\(.id[0:7])`](\(.url)) \(.message) - \(.author.name)"' \
-            "$GITHUB_EVENT_PATH" | sed ':a;N;$!ba;s/\n/\\n/g')
+            "$GITHUB_EVENT_PATH")
 
+          # Monta o payload com jq (seguro e com quebras de linha reais)
           jq -n \
             --arg username "MGT-GitHub" \
             --arg avatar "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
