@@ -13,22 +13,21 @@ jobs:
           BRANCH_URL="https://github.com/${GITHUB_REPOSITORY}/tree/${BRANCH_NAME}"
           COUNT=$(jq '.commits | length' "$GITHUB_EVENT_PATH")
           AUTHOR="${GITHUB_ACTOR}"
+          AUTHOR_URL="https://github.com/${AUTHOR}"
+          AUTHOR_AVATAR="https://github.com/${AUTHOR}.png"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Monta lista de commits (hash curto, link, mensagem e autor)
           COMMITS=$(jq -r \
             '.commits[] | "[`\(.id[0:7])`](\(.url)) \(.message) - \(.author.name)"' \
-            "$GITHUB_EVENT_PATH")
+            "$GITHUB_EVENT_PATH" | sed ':a;N;$!ba;s/\n/\\n/g')
 
-          # Escapa para JSON (garante que não quebre o payload)
-          COMMITS_ESCAPED=$(printf "%s" "$COMMITS" | jq -Rs .)
-
-          # Monta payload com jq (mais seguro que interpolar direto)
           jq -n \
             --arg username "GitHub Bot" \
             --arg avatar "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
             --arg title "📢 Atualização no repositório" \
-            --arg author "🧑‍💻 Autor: ${AUTHOR}" \
+            --arg authorName "$AUTHOR" \
+            --arg authorUrl "$AUTHOR_URL" \
+            --arg authorIcon "$AUTHOR_AVATAR" \
             --arg repo   "📦 Repositório: ${GITHUB_REPOSITORY}" \
             --arg branch "🌿 Branch: [${BRANCH_NAME}](${BRANCH_URL})" \
             --arg count  "📌 ${COUNT} novo(s) commit(s):" \
@@ -39,7 +38,12 @@ jobs:
               avatar_url: $avatar,
               embeds: [{
                 title: $title,
-                description: ($author + "\n" + $repo + "\n" + $branch + "\n" + $count + "\n" + $commits),
+                author: {
+                  name: $authorName,
+                  url: $authorUrl,
+                  icon_url: $authorIcon
+                },
+                description: ($repo + "\n" + $branch + "\n" + $count + "\n" + $commits),
                 color: 7506394,
                 timestamp: $time
               }]
