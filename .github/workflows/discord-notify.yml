@@ -11,33 +11,24 @@ jobs:
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           BRANCH_URL="https://github.com/${GITHUB_REPOSITORY}/tree/${BRANCH_NAME}"
-          COUNT=$(jq '.commits | length' $GITHUB_EVENT_PATH)
+          COUNT=$(jq '.commits | length' "$GITHUB_EVENT_PATH")
           AUTHOR="${GITHUB_ACTOR}"
-          AVATAR_URL="https://github.com/${AUTHOR}.png"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Monta os commits com links e formatação
-          COMMIT_LINES=$(jq -r --arg repo "${GITHUB_REPOSITORY}" '.commits[] | "[`\(.id[0:7])`](https://github.com/" + $repo + "/commit/" + .id) \(.message) — \(.author.name)"' $GITHUB_EVENT_PATH)
-          COMMITS=$(echo "$COMMIT_LINES" | awk '{print $0 "\\n"}' | tr -d '\n')
+          # Lista de commits (hash curto, link, mensagem e autor)
+          COMMITS=$(jq -r \
+            '.commits[] | "[`\(.id[0:7])`](\(.url)) \"\(.message)\" - \(.author.name)"'
+            "$GITHUB_EVENT_PATH" | sed ':a;N;$!ba;s/\n/\\n/g')
 
+          # Envia para o Discord
           curl -X POST -H "Content-Type: application/json" \
           -d "{
             \"username\": \"GitHub Bot\",
             \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
             \"embeds\": [{
               \"title\": \"📢 Atualização no repositório\",
+              \"description\": \"🧑‍💻 Autor: ${AUTHOR}\\n📦 Repositório: ${GITHUB_REPOSITORY}\\n🌿 Branch: [${BRANCH_NAME}](${BRANCH_URL})\\n📌 ${COUNT} novo(s) commit(s):\\n${COMMITS}\",
               \"color\": 7506394,
-              \"author\": {
-                \"name\": \"${AUTHOR}\",
-                \"url\": \"https://github.com/${AUTHOR}\",
-                \"icon_url\": \"${AVATAR_URL}\"
-              },
-              \"fields\": [
-                { \"name\": \"🧑‍💻 Autor\", \"value\": \"${AUTHOR}\", \"inline\": true },
-                { \"name\": \"📦 Repositório\", \"value\": \"${GITHUB_REPOSITORY}\", \"inline\": true },
-                { \"name\": \"🌿 Branch\", \"value\": \"[${BRANCH_NAME}](${BRANCH_URL})\", \"inline\": true },
-                { \"name\": \"📌 ${COUNT} novo(s) commit(s)\", \"value\": \"${COMMITS}\" }
-              ],
               \"timestamp\": \"${TIMESTAMP}\"
             }]
           }" ${{ secrets.DISCORD_WEBHOOK }}
