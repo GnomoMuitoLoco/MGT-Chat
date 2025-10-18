@@ -11,13 +11,14 @@ jobs:
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           BRANCH_URL="https://github.com/${GITHUB_REPOSITORY}/tree/${BRANCH_NAME}"
-          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
           COUNT=$(jq '.commits | length' $GITHUB_EVENT_PATH)
           AUTHOR="${GITHUB_ACTOR}"
           AVATAR_URL="https://github.com/${AUTHOR}.png"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          COMMITS=$(jq -r --arg repo "${GITHUB_REPOSITORY}" '.commits[] | "[`\(.id[0:7])`](https://github.com/" + $repo + "/commit/" + .id) \(.message) — \(.author.name)"' $GITHUB_EVENT_PATH | sed ':a;N;$!ba;s/\n/\\n/g')
+          # Monta os commits com links e formatação
+          COMMIT_LINES=$(jq -r --arg repo "${GITHUB_REPOSITORY}" '.commits[] | "[`\(.id[0:7])`](https://github.com/" + $repo + "/commit/" + .id) \(.message) — \(.author.name)"' $GITHUB_EVENT_PATH)
+          COMMITS=$(echo "$COMMIT_LINES" | awk '{print $0 "\\n"}' | tr -d '\n')
 
           curl -X POST -H "Content-Type: application/json" \
           -d "{
