@@ -99,9 +99,14 @@ public class ChatEventHandler {
 
     private String applyWordFilter(String message) {
         if (!ChatConfig.COMMON.filterEnabled.get()) return message;
-        List<String> blocked = ChatConfig.COMMON.blockedWords.get();
+
+        List<String> blocked = ChatConfig.COMMON.blockedWords.get().stream()
+                .map(String::valueOf)
+                .toList();
+
         String replacement = ChatConfig.COMMON.replacement.get();
         String result = message;
+
         for (String bad : blocked) {
             result = result.replaceAll("(?i)" + java.util.regex.Pattern.quote(bad), replacement);
         }

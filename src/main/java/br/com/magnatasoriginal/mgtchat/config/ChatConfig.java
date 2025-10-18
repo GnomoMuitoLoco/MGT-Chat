@@ -32,7 +32,7 @@ public class ChatConfig {
 
         // Filter
         public final ModConfigSpec.BooleanValue filterEnabled;
-        public final ModConfigSpec.ConfigValue<List<String>> blockedWords;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> blockedWords;
         public final ModConfigSpec.ConfigValue<String> replacement;
 
         // FTB Ranks
@@ -61,7 +61,9 @@ public class ChatConfig {
 
             // Usa define(List) para evitar métodos deprecated de lista
             blockedWords = builder.comment("Lista de palavras bloqueadas (case-insensitive)")
-                    .define("blockedWords", List.of("palavrão1", "palavrão2", "palavrão3"));
+                    .defineListAllowEmpty("blockedWords", List.of("palavrão1", "palavrão2", "palavrão3"), o -> o instanceof String);
+
+
 
             replacement = builder.comment("Texto substituto para palavras bloqueadas")
                     .define("replacement", "***");
