@@ -1,24 +1,42 @@
-name: Notificar Discord
+name: Notificar Discord com commits
 
 on:
   push:
-  create:
-  pull_request:
-    types: [opened, closed]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Enviar notificação para o Discord
+      - name: Enviar commits para o Discord
         run: |
-          echo "Enviando notificação para o Discord..."
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_URL="https://github.com/${GITHUB_REPOSITORY}/tree/${BRANCH_NAME}"
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+          COUNT=$(jq '.commits | length' $GITHUB_EVENT_PATH)
+          AUTHOR="${GITHUB_ACTOR}"
+          AVATAR_URL="https://github.com/${AUTHOR}.png"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          COMMITS=$(jq -r --arg repo "${GITHUB_REPOSITORY}" '.commits[] | "[`\(.id[0:7])`](https://github.com/" + $repo + "/commit/" + .id) \(.message) — \(.author.name)"' $GITHUB_EVENT_PATH | sed ':a;N;$!ba;s/\n/\\n/g')
+
           curl -X POST -H "Content-Type: application/json" \
-          -d '{
-            "embeds": [{
-              "title": "📢 Atualização no repositório",
-              "description": "Evento: ${{ github.event_name }}\nAutor: ${{ github.actor }}\nRepositório: ${{ github.repository }}\nBranch: ${{ github.ref }}",
-              "color": 5814783,
-              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+          -d "{
+            \"username\": \"GitHub Bot\",
+            \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+            \"embeds\": [{
+              \"title\": \"📢 Atualização no repositório\",
+              \"color\": 7506394,
+              \"author\": {
+                \"name\": \"${AUTHOR}\",
+                \"url\": \"https://github.com/${AUTHOR}\",
+                \"icon_url\": \"${AVATAR_URL}\"
+              },
+              \"fields\": [
+                { \"name\": \"🧑‍💻 Autor\", \"value\": \"${AUTHOR}\", \"inline\": true },
+                { \"name\": \"📦 Repositório\", \"value\": \"${GITHUB_REPOSITORY}\", \"inline\": true },
+                { \"name\": \"🌿 Branch\", \"value\": \"[${BRANCH_NAME}](${BRANCH_URL})\", \"inline\": true },
+                { \"name\": \"📌 ${COUNT} novo(s) commit(s)\", \"value\": \"${COMMITS}\" }
+              ],
+              \"timestamp\": \"${TIMESTAMP}\"
             }]
-          }' ${{ secrets.DISCORD_WEBHOOK }}
+          }" ${{ secrets.DISCORD_WEBHOOK }}
