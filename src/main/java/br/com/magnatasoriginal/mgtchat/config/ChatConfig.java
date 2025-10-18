@@ -23,9 +23,14 @@ public class ChatConfig {
         public final ModConfigSpec.ConfigValue<String> globalMessageColor;
         public final ModConfigSpec.ConfigValue<String> localMessageColor;
         public final ModConfigSpec.IntValue localRange;
-        public final ModConfigSpec.ConfigValue<String> tellColor;
         public final ModConfigSpec.BooleanValue allowHexColors;
         public final ModConfigSpec.BooleanValue allowLegacyColors;
+
+        // Private (Tell)
+        public final ModConfigSpec.ConfigValue<String> tellFormatTo;
+        public final ModConfigSpec.ConfigValue<String> tellFormatFrom;
+        public final ModConfigSpec.ConfigValue<String> replyTellFormatTo;
+        public final ModConfigSpec.ConfigValue<String> replyTellFormatFrom;
 
         // AntiSpam
         public final ModConfigSpec.IntValue messageDelay;
@@ -63,14 +68,27 @@ public class ChatConfig {
             localRange = builder.comment("Distância máxima (em blocos) para o chat local")
                     .defineInRange("localRange", 100, 10, 10000);
 
-            tellColor = builder.comment("Cor padrão para mensagens privadas (/tell)")
-                    .define("tellColor", "&d");
-
             allowHexColors = builder.comment("Permitir uso de cores hexadecimais no chat")
                     .define("allowHexColors", true);
 
             allowLegacyColors = builder.comment("Permitir uso de códigos de cor & e §")
                     .define("allowLegacyColors", true);
+
+            builder.pop();
+
+            builder.push("private");
+
+            tellFormatTo = builder.comment("Formato da mensagem privada enviada. Placeholders: {send_player}, {receive_player}, {message}")
+                    .define("tellFormatTo", "&8[&cr&8] &7Sussurou para &r{receive_player}: &c{message}");
+
+            tellFormatFrom = builder.comment("Formato da mensagem privada recebida. Placeholders: {send_player}, {receive_player}, {message}")
+                    .define("tellFormatFrom", "&8[&cr&8] &r{send_player} sussurrou: &c{message}");
+
+            replyTellFormatTo = builder.comment("Formato da mensagem enviada via /r. Placeholders: {send_player}, {receive_player}, {message}")
+                    .define("replyTellFormatTo", "&8[&cr&8] &7Sussurou para &r{receive_player}: &c{message}");
+
+            replyTellFormatFrom = builder.comment("Formato da mensagem recebida via /r. Placeholders: {send_player}, {receive_player}, {message}")
+                    .define("replyTellFormatFrom", "&8[&cr&8] &r{send_player} sussurrou: &c{message}");
 
             builder.pop();
 
@@ -92,7 +110,6 @@ public class ChatConfig {
             filterEnabled = builder.comment("Ativar filtro de palavras proibidas")
                     .define("enabled", true);
 
-            // Substitui o método deprecated por defineList
             blockedWords = builder.comment("Lista de palavras bloqueadas (case-insensitive)")
                     .defineList("blockedWords",
                             List.of("palavrão1", "palavrão2", "palavrão3"),

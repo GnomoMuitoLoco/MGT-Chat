@@ -6,7 +6,9 @@ import br.com.magnatasoriginal.mgtchat.commands.TellCommand;
 import br.com.magnatasoriginal.mgtchat.config.ChatConfig;
 import br.com.magnatasoriginal.mgtchat.events.ChatEventHandler;
 import br.com.magnatasoriginal.mgtchat.events.PrefixHandler;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.logging.LogUtils;
+import net.minecraft.commands.CommandSourceStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
@@ -60,8 +62,17 @@ public class MGTChat {
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
-        LocalCommand.register(event.getDispatcher());
-        GlobalCommand.register(event.getDispatcher());
-        TellCommand.register(event.getDispatcher());
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+
+        // Remover comandos vanilla que conflitam (tell/msg/w/r)
+        dispatcher.getRoot().getChildren().removeIf(node -> {
+            String name = node.getName();
+            return "tell".equals(name) || "msg".equals(name) || "w".equals(name) || "r".equals(name);
+        });
+
+        // Registrar nossos comandos
+        LocalCommand.register(dispatcher);
+        GlobalCommand.register(dispatcher);
+        TellCommand.register(dispatcher);
     }
 }

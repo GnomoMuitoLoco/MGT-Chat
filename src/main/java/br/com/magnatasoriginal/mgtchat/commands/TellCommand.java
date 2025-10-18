@@ -1,5 +1,8 @@
 package br.com.magnatasoriginal.mgtchat.commands;
 
+import br.com.magnatasoriginal.mgtchat.config.ChatConfig;
+import br.com.magnatasoriginal.mgtcore.placeholders.PlaceholderService;
+import br.com.magnatasoriginal.mgtcore.util.ColorUtil;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -30,19 +33,26 @@ public class TellCommand {
 
                                     // Verifica se o alvo está ignorando o remetente
                                     if (IgnoreCommand.isIgnoring(target, sender)) {
-                                        sender.sendSystemMessage(Component.literal("§cEsse jogador está ignorando você."));
+                                        sender.sendSystemMessage(ColorUtil.translate("§cEsse jogador está ignorando você."));
                                         return 0;
                                     }
 
-                                    // Cor padrão configurável para tell
-                                    String color = br.com.magnatasoriginal.mgtchat.config.ChatConfig.COMMON.tellColor.get();
+                                    // Mensagem para o remetente
+                                    String toSenderRaw = PlaceholderService.resolveContext(
+                                            ChatConfig.COMMON.tellFormatTo.get(),
+                                            sender, target, msg
+                                    );
+                                    Component toSender = ColorUtil.translate(toSenderRaw);
 
-                                    // Envia mensagem privada
-                                    Component toTarget = Component.literal(color + "[De " + sender.getName().getString() + "] " + msg);
-                                    Component toSender = Component.literal(color + "[Para " + target.getName().getString() + "] " + msg);
+                                    // Mensagem para o destinatário
+                                    String toTargetRaw = PlaceholderService.resolveContext(
+                                            ChatConfig.COMMON.tellFormatFrom.get(),
+                                            sender, target, msg
+                                    );
+                                    Component toTarget = ColorUtil.translate(toTargetRaw);
 
-                                    target.sendSystemMessage(toTarget);
                                     sender.sendSystemMessage(toSender);
+                                    target.sendSystemMessage(toTarget);
 
                                     // Registra último remetente para o /r
                                     lastMessengers.put(target.getUUID(), sender.getUUID());
@@ -62,24 +72,34 @@ public class TellCommand {
 
                             UUID last = lastMessengers.get(sender.getUUID());
                             if (last == null) {
-                                sender.sendSystemMessage(Component.literal("§cVocê não tem ninguém para responder."));
+                                sender.sendSystemMessage(ColorUtil.translate("§cVocê não tem ninguém para responder."));
                                 return 0;
                             }
 
                             ServerPlayer target = server.getPlayerList().getPlayer(last);
                             if (target == null) {
-                                sender.sendSystemMessage(Component.literal("§cEsse jogador não está online."));
+                                sender.sendSystemMessage(ColorUtil.translate("§cEsse jogador não está online."));
                                 return 0;
                             }
 
                             String msg = StringArgumentType.getString(ctx, "message");
-                            String color = br.com.magnatasoriginal.mgtchat.config.ChatConfig.COMMON.tellColor.get();
 
-                            Component toTarget = Component.literal(color + "[De " + sender.getName().getString() + "] " + msg);
-                            Component toSender = Component.literal(color + "[Para " + target.getName().getString() + "] " + msg);
+                            // Mensagem para o remetente (reply)
+                            String toSenderRaw = PlaceholderService.resolveContext(
+                                    ChatConfig.COMMON.replyTellFormatTo.get(),
+                                    sender, target, msg
+                            );
+                            Component toSender = ColorUtil.translate(toSenderRaw);
 
-                            target.sendSystemMessage(toTarget);
+                            // Mensagem para o destinatário (reply)
+                            String toTargetRaw = PlaceholderService.resolveContext(
+                                    ChatConfig.COMMON.replyTellFormatFrom.get(),
+                                    sender, target, msg
+                            );
+                            Component toTarget = ColorUtil.translate(toTargetRaw);
+
                             sender.sendSystemMessage(toSender);
+                            target.sendSystemMessage(toTarget);
 
                             // Atualiza último remetente
                             lastMessengers.put(target.getUUID(), sender.getUUID());

@@ -23,9 +23,6 @@ localMessageColor = "&e"
 # Distância máxima (em blocos) para o chat local
 localRange = 100
 
-# Cor padrão para mensagens privadas (/tell)
-tellColor = "&d"
-
 # Permitir uso de cores hexadecimais no chat (ex: &#FFAA00)
 allowHexColors = true
 
@@ -42,7 +39,6 @@ blockRepeated = true
 # Número máximo de mensagens iguais permitidas em sequência
 maxRepeated = 2
 
-
 [filter]
 # Ativar filtro de palavras proibidas
 enabled = true
@@ -57,7 +53,6 @@ blockedWords = [
 # Mensagem substituta quando palavra bloqueada for detectada
 replacement = "***"
 
-
 [ftbRanks]
 # Ativar integração com FTB Ranks para prefixos
 usePrefixes = true
@@ -65,3 +60,11 @@ usePrefixes = true
 # Formato da mensagem com prefixo
 # Placeholders: {prefix}, {player}, {message}
 format = "{prefix} {player}: {message}"
+
+[private]
+# Placeholders: {send_player}, {receive_player}, {message}
+tellFormatTo = "&8[&cr&8] &7Sussurrou para &r{receive_player}: &c{message}"
+tellFormatFrom = "&8[&cr&8] &r{send_player} &7sussurrou: &c{message}"
+replyTellFormatTo = "&8[&cr&8] &7Sussurou para &r{receive_player}: &c{message}"
+replyTellFormatFrom = "&8[&cr&8] &r{send_player} &7sussurrou: &c{message}"
+
