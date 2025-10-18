@@ -18,7 +18,7 @@ public class LocalCommand {
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     ChatChannelManager.setChannel(player, ChatChannelManager.Channel.LOCAL);
-                    player.sendSystemMessage(Component.literal("§aVocê travou seu chat no canal LOCAL."));
+                    player.sendSystemMessage(ColorUtil.translate("§aVocê travou seu chat no canal LOCAL."));
                     return 1;
                 })
                 .then(Commands.argument("message", StringArgumentType.greedyString())
@@ -36,7 +36,7 @@ public class LocalCommand {
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     ChatChannelManager.setChannel(player, ChatChannelManager.Channel.LOCAL);
-                    player.sendSystemMessage(Component.literal("§aVocê travou seu chat no canal LOCAL."));
+                    player.sendSystemMessage(ColorUtil.translate("§aVocê travou seu chat no canal LOCAL."));
                     return 1;
                 })
                 .then(Commands.argument("message", StringArgumentType.greedyString())
@@ -52,8 +52,12 @@ public class LocalCommand {
 
     private static void sendLocalMessage(ServerPlayer sender, String msg) {
         int range = ChatConfig.COMMON.localRange.get();
-        String base = ChatConfig.COMMON.localPrefix.get() + " " +
-                sender.getName().getString() + ": " + msg;
+
+        String base = ChatConfig.COMMON.localFormat.get()
+                .replace("{prefix}", "")
+                .replace("{player}", sender.getName().getString())
+                .replace("{message_color}", ChatConfig.COMMON.localMessageColor.get())
+                .replace("{message}", msg);
 
         Component text = ColorUtil.translate(base);
 

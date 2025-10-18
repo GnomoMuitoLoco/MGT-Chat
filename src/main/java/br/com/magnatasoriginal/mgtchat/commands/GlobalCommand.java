@@ -18,7 +18,7 @@ public class GlobalCommand {
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     ChatChannelManager.setChannel(player, ChatChannelManager.Channel.GLOBAL);
-                    player.sendSystemMessage(Component.literal("§bVocê travou seu chat no canal GLOBAL."));
+                    player.sendSystemMessage(ColorUtil.translate("§bVocê travou seu chat no canal GLOBAL."));
                     return 1;
                 })
                 .then(Commands.argument("message", StringArgumentType.greedyString())
@@ -36,7 +36,7 @@ public class GlobalCommand {
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     ChatChannelManager.setChannel(player, ChatChannelManager.Channel.GLOBAL);
-                    player.sendSystemMessage(Component.literal("§bVocê travou seu chat no canal GLOBAL."));
+                    player.sendSystemMessage(ColorUtil.translate("§bVocê travou seu chat no canal GLOBAL."));
                     return 1;
                 })
                 .then(Commands.argument("message", StringArgumentType.greedyString())
@@ -51,8 +51,11 @@ public class GlobalCommand {
     }
 
     private static void sendGlobalMessage(ServerPlayer sender, String msg) {
-        String prefix = ChatConfig.COMMON.globalPrefix.get();
-        String base = prefix + " " + sender.getName().getString() + ": " + msg;
+        String base = ChatConfig.COMMON.globalFormat.get()
+                .replace("{prefix}", "")
+                .replace("{player}", sender.getName().getString())
+                .replace("{message_color}", ChatConfig.COMMON.globalMessageColor.get())
+                .replace("{message}", msg);
 
         Component text = ColorUtil.translate(base);
 

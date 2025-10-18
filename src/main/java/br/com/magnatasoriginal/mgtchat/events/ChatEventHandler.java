@@ -65,8 +65,12 @@ public class ChatEventHandler {
         }
 
         // GLOBAL
-        String base = ChatConfig.COMMON.globalPrefix.get() + " " +
-                player.getName().getString() + ": " + filteredMessage;
+        String base = ChatConfig.COMMON.globalFormat.get()
+                .replace("{prefix}", "") // aqui pode entrar prefixo de rank no futuro
+                .replace("{player}", player.getName().getString())
+                .replace("{message_color}", ChatConfig.COMMON.globalMessageColor.get())
+                .replace("{message}", filteredMessage);
+
         Component styled = ColorUtil.translate(base);
 
         event.setCanceled(true); // cancela vanilla
@@ -81,8 +85,13 @@ public class ChatEventHandler {
 
     private void sendLocalMessage(ServerPlayer sender, String message) {
         int range = ChatConfig.COMMON.localRange.get();
-        String base = ChatConfig.COMMON.localPrefix.get() + " " +
-                sender.getName().getString() + ": " + message;
+
+        String base = ChatConfig.COMMON.localFormat.get()
+                .replace("{prefix}", "")
+                .replace("{player}", sender.getName().getString())
+                .replace("{message_color}", ChatConfig.COMMON.localMessageColor.get())
+                .replace("{message}", message);
+
         Component styled = ColorUtil.translate(base);
 
         for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {

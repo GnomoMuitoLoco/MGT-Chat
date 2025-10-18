@@ -47,10 +47,13 @@ public class MGTChat {
         LOGGER.info("[MGT-Chat] Common setup executado.");
 
         // Exemplo: ler configs
-        String globalPrefix = ChatConfig.COMMON.globalPrefix.get();
+        String globalFormat = ChatConfig.COMMON.globalFormat.get();
+        String globalMessageColor = ChatConfig.COMMON.globalMessageColor.get();
         boolean debug = ChatConfig.COMMON.debug.get();
 
-        LOGGER.info("[MGT-Chat] Prefixo global configurado: {}", globalPrefix);
+        LOGGER.info("[MGT-Chat] Formato global configurado: {}", globalFormat);
+        LOGGER.info("[MGT-Chat] Cor padrão das mensagens globais: {}", globalMessageColor);
+
         if (debug) {
             LOGGER.debug("[MGT-Chat] Debug ativado!");
         }

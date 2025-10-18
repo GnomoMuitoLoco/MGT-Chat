@@ -17,9 +17,9 @@ jobs:
           AUTHOR_AVATAR="https://github.com/${AUTHOR}.png"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Lista de commits (hash curto, link, mensagem e autor)
+          # Lista de commits (hash curto, link, mensagem multilinha e autor)
           COMMITS=$(jq -r \
-            '.commits[] | "[`\(.id[0:7])`](\(.url)) \(.message) - \(.author.name)"' \
+            '.commits[] | "[`\(.id[0:7])`](\(.url))\n\(.message)\n- \(.author.name)"' \
             "$GITHUB_EVENT_PATH")
 
           # Monta o payload com jq (seguro e com quebras de linha reais)
@@ -45,7 +45,7 @@ jobs:
                   url: $authorUrl,
                   icon_url: $authorIcon
                 },
-                description: ($repo + "\n" + $branch + "\n" + $count + "\n" + $commits),
+                description: ($repo + "\n" + $branch + "\n" + $count + "\n\n" + $commits),
                 color: 7506394,
                 timestamp: $time
               }]

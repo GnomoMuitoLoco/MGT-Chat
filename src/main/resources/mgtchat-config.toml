@@ -6,11 +6,19 @@
 # Ativar logs de debug do chat
 debug = false
 
-# Prefixo padrão para mensagens globais
-globalPrefix = "&6[Global]"
+# Formato do chat global
+# Placeholders: {prefix}, {player}, {message_color}, {message}
+globalFormat = "&8[&3g&8] &r{prefix} &r{player}&f: {message_color}{message}"
 
-# Prefixo padrão para mensagens locais
-localPrefix = "&a[Local]"
+# Formato do chat local
+# Placeholders: {prefix}, {player}, {message_color}, {message}
+localFormat = "&8[&el&8] &r{prefix} &r{player}&f: {message_color}{message}"
+
+# Cor aplicada às mensagens globais
+globalMessageColor = "&3"
+
+# Cor aplicada às mensagens locais
+localMessageColor = "&e"
 
 # Distância máxima (em blocos) para o chat local
 localRange = 100
@@ -23,7 +31,6 @@ allowHexColors = true
 
 # Permitir uso de códigos de cor & e §
 allowLegacyColors = true
-
 
 [antiSpam]
 # Tempo mínimo entre mensagens (em milissegundos)
