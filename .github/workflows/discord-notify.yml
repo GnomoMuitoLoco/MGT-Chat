@@ -15,20 +15,34 @@ jobs:
           AUTHOR="${GITHUB_ACTOR}"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Lista de commits (hash curto, link, mensagem e autor)
+          # Monta lista de commits (hash curto, link, mensagem e autor)
           COMMITS=$(jq -r \
-            '.commits[] | "[`\(.id[0:7])`](\(.url)) \"\(.message)\" - \(.author.name)"'
-            "$GITHUB_EVENT_PATH" | sed ':a;N;$!ba;s/\n/\\n/g')
+            '.commits[] | "[`\(.id[0:7])`](\(.url)) \(.message) - \(.author.name)"' \
+            "$GITHUB_EVENT_PATH")
 
-          # Envia para o Discord
-          curl -X POST -H "Content-Type: application/json" \
-          -d "{
-            \"username\": \"GitHub Bot\",
-            \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
-            \"embeds\": [{
-              \"title\": \"📢 Atualização no repositório\",
-              \"description\": \"🧑‍💻 Autor: ${AUTHOR}\\n📦 Repositório: ${GITHUB_REPOSITORY}\\n🌿 Branch: [${BRANCH_NAME}](${BRANCH_URL})\\n📌 ${COUNT} novo(s) commit(s):\\n${COMMITS}\",
-              \"color\": 7506394,
-              \"timestamp\": \"${TIMESTAMP}\"
-            }]
-          }" ${{ secrets.DISCORD_WEBHOOK }}
+          # Escapa para JSON (garante que não quebre o payload)
+          COMMITS_ESCAPED=$(printf "%s" "$COMMITS" | jq -Rs .)
+
+          # Monta payload com jq (mais seguro que interpolar direto)
+          jq -n \
+            --arg username "GitHub Bot" \
+            --arg avatar "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
+            --arg title "📢 Atualização no repositório" \
+            --arg author "🧑‍💻 Autor: ${AUTHOR}" \
+            --arg repo   "📦 Repositório: ${GITHUB_REPOSITORY}" \
+            --arg branch "🌿 Branch: [${BRANCH_NAME}](${BRANCH_URL})" \
+            --arg count  "📌 ${COUNT} novo(s) commit(s):" \
+            --arg commits "$COMMITS" \
+            --arg time   "$TIMESTAMP" \
+            '{
+              username: $username,
+              avatar_url: $avatar,
+              embeds: [{
+                title: $title,
+                description: ($author + "\n" + $repo + "\n" + $branch + "\n" + $count + "\n" + $commits),
+                color: 7506394,
+                timestamp: $time
+              }]
+            }' \
+          | curl -X POST -H "Content-Type: application/json" \
+            -d @- ${{ secrets.DISCORD_WEBHOOK }}
