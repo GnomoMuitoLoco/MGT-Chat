@@ -50,7 +50,7 @@ public class GlobalCommand {
         );
     }
 
-    private static void sendGlobalMessage(ServerPlayer sender, String msg) {
+    public static void sendGlobalMessage(ServerPlayer sender, String msg) {
         String base = ChatConfig.COMMON.globalFormat.get()
                 .replace("{prefix}", "")
                 .replace("{player}", sender.getName().getString())
@@ -60,7 +60,9 @@ public class GlobalCommand {
         Component text = ColorUtil.translate(base);
 
         for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {
-            target.sendSystemMessage(text);
+            if (!br.com.magnatasoriginal.mgtchat.commands.IgnoreCommand.isIgnoring(target, sender)) {
+                target.sendSystemMessage(text);
+            }
         }
     }
 }

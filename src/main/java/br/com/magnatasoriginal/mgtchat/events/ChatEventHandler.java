@@ -3,6 +3,7 @@ package br.com.magnatasoriginal.mgtchat.events;
 import br.com.magnatasoriginal.mgtchat.config.ChatConfig;
 import br.com.magnatasoriginal.mgtchat.util.ChatChannelManager;
 import br.com.magnatasoriginal.mgtcore.util.ColorUtil;
+import br.com.magnatasoriginal.mgtchat.commands.IgnoreCommand;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -75,8 +76,11 @@ public class ChatEventHandler {
 
         event.setCanceled(true); // cancela vanilla
         for (ServerPlayer target : player.server.getPlayerList().getPlayers()) {
-            target.sendSystemMessage(styled);
+            if (!IgnoreCommand.isIgnoring(target, player)) {
+                target.sendSystemMessage(styled);
+            }
         }
+
 
         if (ChatConfig.COMMON.debug.get()) {
             LOGGER.debug("[MGT-Chat] (GLOBAL) {} -> {}", player.getName().getString(), base);
@@ -96,7 +100,8 @@ public class ChatEventHandler {
 
         for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {
             if (target.level() == sender.level() &&
-                    target.blockPosition().closerThan(sender.blockPosition(), range)) {
+                    target.blockPosition().closerThan(sender.blockPosition(), range) &&
+                    !IgnoreCommand.isIgnoring(target, sender)) {
                 target.sendSystemMessage(styled);
             }
         }

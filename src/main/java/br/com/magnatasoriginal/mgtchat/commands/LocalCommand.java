@@ -63,7 +63,8 @@ public class LocalCommand {
 
         for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {
             if (target.level() == sender.level() &&
-                    target.blockPosition().closerThan(sender.blockPosition(), range)) {
+                    target.blockPosition().closerThan(sender.blockPosition(), range) &&
+                    !br.com.magnatasoriginal.mgtchat.commands.IgnoreCommand.isIgnoring(target, sender)) {
                 target.sendSystemMessage(text);
             }
         }

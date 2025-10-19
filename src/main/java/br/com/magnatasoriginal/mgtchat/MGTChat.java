@@ -1,6 +1,7 @@
 package br.com.magnatasoriginal.mgtchat;
 
 import br.com.magnatasoriginal.mgtchat.commands.GlobalCommand;
+import br.com.magnatasoriginal.mgtchat.commands.IgnoreCommand;
 import br.com.magnatasoriginal.mgtchat.commands.LocalCommand;
 import br.com.magnatasoriginal.mgtchat.commands.TellCommand;
 import br.com.magnatasoriginal.mgtchat.config.ChatConfig;
@@ -74,5 +75,6 @@ public class MGTChat {
         LocalCommand.register(dispatcher);
         GlobalCommand.register(dispatcher);
         TellCommand.register(dispatcher);
+        IgnoreCommand.register(dispatcher);
     }
 }
