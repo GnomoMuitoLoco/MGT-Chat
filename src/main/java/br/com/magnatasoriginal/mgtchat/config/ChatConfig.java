@@ -25,6 +25,9 @@ public class ChatConfig {
         public final ModConfigSpec.IntValue localRange;
         public final ModConfigSpec.BooleanValue allowHexColors;
         public final ModConfigSpec.BooleanValue allowLegacyColors;
+        // Local warnings
+        public final ModConfigSpec.BooleanValue localEmptyWarningEnabled;
+        public final ModConfigSpec.ConfigValue<String> localEmptyWarningMessage;
 
         // Private (Tell)
         public final ModConfigSpec.ConfigValue<String> tellFormatTo;
@@ -41,6 +44,10 @@ public class ChatConfig {
         public final ModConfigSpec.BooleanValue filterEnabled;
         public final ModConfigSpec.ConfigValue<List<? extends String>> blockedWords;
         public final ModConfigSpec.ConfigValue<String> replacement;
+        // Blocked commands (new)
+        public final ModConfigSpec.BooleanValue blockedCommandsEnabled;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> blockedCommands;
+        public final ModConfigSpec.ConfigValue<String> blockedCommandMessage;
 
         // FTB Ranks
         public final ModConfigSpec.BooleanValue usePrefixes;
@@ -67,6 +74,18 @@ public class ChatConfig {
 
             localRange = builder.comment("Distância máxima (em blocos) para o chat local")
                     .defineInRange("localRange", 100, 10, 10000);
+
+            // Aviso quando não houver ouvintes locais
+            // moved to config: local.empty-warning.enabled/message
+            // We use a nested key for clarity
+            builder.push("local");
+            this.localEmptyWarningEnabled = builder
+                    .comment("Ativar aviso quando não houver jogadores próximos no chat local")
+                    .define("empty-warning.enabled", true);
+            this.localEmptyWarningMessage = builder
+                    .comment("Mensagem exibida quando não há ninguém por perto (use & para cores)")
+                    .define("empty-warning.message", "&cVocê fala mas ninguém pode te ouvir");
+            builder.pop();
 
             allowHexColors = builder.comment("Permitir uso de cores hexadecimais no chat")
                     .define("allowHexColors", true);
@@ -117,6 +136,18 @@ public class ChatConfig {
 
             replacement = builder.comment("Texto substituto para palavras bloqueadas")
                     .define("replacement", "***");
+
+            // Novos: comandos bloqueados e mensagem de aviso
+            blockedCommandsEnabled = builder.comment("Ativar bloqueio de comandos configurados")
+                    .define("blockedCommands.enabled", false);
+
+            blockedCommands = builder.comment("Lista de comandos bloqueados (sem /)")
+                    .defineList("blockedCommands",
+                            List.of("plugins"),
+                            o -> o instanceof String);
+
+            blockedCommandMessage = builder.comment("Mensagem exibida quando um comando bloqueado é usado")
+                    .define("blockedCommandMessage", "&cComando não encontrado");
 
             builder.pop();
 

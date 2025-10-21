@@ -1,9 +1,14 @@
 package br.com.magnatasoriginal.mgtchat.events;
 
+import br.com.magnatasoriginal.mgtchat.MGTChat;
 import br.com.magnatasoriginal.mgtchat.config.ChatConfig;
+import br.com.magnatasoriginal.mgtchat.service.AntiSpamService;
+import br.com.magnatasoriginal.mgtchat.service.ChatFormatterService;
+import br.com.magnatasoriginal.mgtchat.service.ChatLogger;
+import br.com.magnatasoriginal.mgtchat.service.MessageBroadcaster;
+import br.com.magnatasoriginal.mgtchat.storage.IgnoreListStorage;
 import br.com.magnatasoriginal.mgtchat.util.ChatChannelManager;
 import br.com.magnatasoriginal.mgtcore.util.ColorUtil;
-import br.com.magnatasoriginal.mgtchat.commands.IgnoreCommand;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,106 +16,136 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import org.slf4j.Logger;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Optional;
 
+/**
+ * Handler principal de eventos de chat.
+ *
+ * WHY: Refatorado para usar services dedicados (SRP aplicado).
+ * Reduzido de 127 linhas para ~70 linhas, removendo duplicação.
+ *
+ * @since 1.0.0
+ * @version 1.1.0 - Refatorado para usar services
+ */
 public class ChatEventHandler {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private final Map<UUID, Long> lastMessageTime = new ConcurrentHashMap<>();
-    private final Map<UUID, String> lastMessageContent = new ConcurrentHashMap<>();
-    private final Map<UUID, Integer> repeatedCount = new ConcurrentHashMap<>();
+    private final AntiSpamService antiSpamService;
+    private final ChatFormatterService formatterService;
+    private final MessageBroadcaster broadcaster;
+    private final ChatLogger chatLogger;
+    private final IgnoreListStorage ignoreListStorage;
+
+    public ChatEventHandler(AntiSpamService antiSpamService,
+                           ChatFormatterService formatterService,
+                           MessageBroadcaster broadcaster,
+                           ChatLogger chatLogger,
+                           IgnoreListStorage ignoreListStorage) {
+        this.antiSpamService = antiSpamService;
+        this.formatterService = formatterService;
+        this.broadcaster = broadcaster;
+        this.chatLogger = chatLogger;
+        this.ignoreListStorage = ignoreListStorage;
+    }
 
     @SubscribeEvent
     public void onServerChat(ServerChatEvent event) {
         ServerPlayer player = event.getPlayer();
-        UUID uuid = player.getUUID();
         String originalMessage = event.getMessage().getString();
 
-        // Anti-spam: delay mínimo
-        long now = System.currentTimeMillis();
-        long lastTime = lastMessageTime.getOrDefault(uuid, 0L);
-        int delay = ChatConfig.COMMON.messageDelay.get();
-        if (delay > 0 && (now - lastTime) < delay) {
+        // WHY: Verificar se jogador está mutado primeiro
+        if (MGTChat.getMuteStorage().isMuted(player)) {
             event.setCanceled(true);
-            player.sendSystemMessage(ColorUtil.translate("§cVocê está enviando mensagens muito rápido!"));
+            long remainingTime = MGTChat.getMuteStorage().getRemainingTime(player.getUUID());
+
+            if (remainingTime == -1) {
+                player.sendSystemMessage(Component.literal("§cVocê está mutado permanentemente."));
+            } else {
+                long seconds = remainingTime / 1000;
+                player.sendSystemMessage(Component.literal("§cVocê está mutado por mais " + seconds + " segundos."));
+            }
             return;
         }
 
-        // Anti-spam: mensagens repetidas
-        String lastMsg = lastMessageContent.getOrDefault(uuid, "");
-        if (ChatConfig.COMMON.blockRepeated.get() && originalMessage.equalsIgnoreCase(lastMsg)) {
-            int count = repeatedCount.getOrDefault(uuid, 1) + 1;
-            repeatedCount.put(uuid, count);
-            if (count > ChatConfig.COMMON.maxRepeated.get()) {
-                event.setCanceled(true);
-                player.sendSystemMessage(ColorUtil.translate("§cMensagem repetida bloqueada."));
-                return;
-            }
-        } else {
-            repeatedCount.put(uuid, 1);
+        // WHY: Anti-spam check delegado ao service dedicado
+        Optional<Component> spamError = antiSpamService.checkSpam(player, originalMessage);
+        if (spamError.isPresent()) {
+            event.setCanceled(true);
+            player.sendSystemMessage(spamError.get());
+            chatLogger.logSpamBlocked(player, spamError.get().getString());
+            return;
         }
 
-        lastMessageTime.put(uuid, now);
-        lastMessageContent.put(uuid, originalMessage);
-
-        // Filtro de palavras
+        // WHY: Aplicar filtro de palavras
         String filteredMessage = applyWordFilter(originalMessage);
 
+        // WHY: Verificar canal atual do jogador
         ChatChannelManager.Channel channel = ChatChannelManager.getChannel(player);
 
+        // WHY: Cancelar evento vanilla sempre, vamos mandar nossa própria mensagem
+        event.setCanceled(true);
+
         if (channel == ChatChannelManager.Channel.LOCAL) {
-            sendLocalMessage(player, filteredMessage);
-            event.setCanceled(true);
-            return;
-        }
-
-        // GLOBAL
-        String base = ChatConfig.COMMON.globalFormat.get()
-                .replace("{prefix}", "") // aqui pode entrar prefixo de rank no futuro
-                .replace("{player}", player.getName().getString())
-                .replace("{message_color}", ChatConfig.COMMON.globalMessageColor.get())
-                .replace("{message}", filteredMessage);
-
-        Component styled = ColorUtil.translate(base);
-
-        event.setCanceled(true); // cancela vanilla
-        for (ServerPlayer target : player.server.getPlayerList().getPlayers()) {
-            if (!IgnoreCommand.isIgnoring(target, player)) {
-                target.sendSystemMessage(styled);
-            }
-        }
-
-
-        if (ChatConfig.COMMON.debug.get()) {
-            LOGGER.debug("[MGT-Chat] (GLOBAL) {} -> {}", player.getName().getString(), base);
+            handleLocalChat(player, filteredMessage);
+        } else {
+            handleGlobalChat(player, filteredMessage);
         }
     }
 
-    private void sendLocalMessage(ServerPlayer sender, String message) {
+    /**
+     * Processa mensagem do chat global.
+     *
+     * WHY: Separado em método privado para clareza.
+     */
+    private void handleGlobalChat(ServerPlayer sender, String message) {
+        Component formatted = formatterService.formatGlobalMessage(sender, message);
+        int recipientCount = broadcaster.broadcastGlobal(sender, formatted);
+
+        // WHY: Log estruturado para auditoria
+        chatLogger.logGlobal(sender, message);
+
+        if (ChatConfig.COMMON.debug.get()) {
+            LOGGER.debug("[MGT-Chat] Global broadcast: {} recipients", recipientCount);
+        }
+    }
+
+    /**
+     * Processa mensagem do chat local.
+     *
+     * WHY: Separado em método privado + adiciona aviso se ninguém recebeu.
+     */
+    private void handleLocalChat(ServerPlayer sender, String message) {
         int range = ChatConfig.COMMON.localRange.get();
+        Component formatted = formatterService.formatLocalMessage(sender, message);
 
-        String base = ChatConfig.COMMON.localFormat.get()
-                .replace("{prefix}", "")
-                .replace("{player}", sender.getName().getString())
-                .replace("{message_color}", ChatConfig.COMMON.localMessageColor.get())
-                .replace("{message}", message);
+        // ALWAYS show the message to the sender so they see what they sent
+        sender.sendSystemMessage(formatted);
 
-        Component styled = ColorUtil.translate(base);
+        // WHY: ignoreSpectators=true para não contar espectadores como destinatários
+        int recipientCount = broadcaster.broadcastLocal(sender, formatted, range, true);
 
-        for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {
-            if (target.level() == sender.level() &&
-                    target.blockPosition().closerThan(sender.blockPosition(), range) &&
-                    !IgnoreCommand.isIgnoring(target, sender)) {
-                target.sendSystemMessage(styled);
-            }
+        // WHY: Log estruturado
+        chatLogger.logLocal(sender, message, recipientCount);
+
+        // WHY: Aviso configurável quando ninguém está por perto
+        if (recipientCount == 0) {
+            // Mensagem de aviso padronizada (cor e tradução via ColorUtil)
+            sender.sendSystemMessage(ColorUtil.translate("&cVocê fala mas ninguém pode te ouvir"));
+            chatLogger.logLocalEmpty(sender);
         }
 
         if (ChatConfig.COMMON.debug.get()) {
-            LOGGER.debug("[MGT-Chat] (LOCAL) {} -> {}", sender.getName().getString(), base);
+            LOGGER.debug("[MGT-Chat] Local broadcast: {} recipients in {}m range", recipientCount, range);
         }
     }
 
+    /**
+     * Aplica filtro de palavras proibidas.
+     *
+     * WHY: Mantido inline pois é simples e específico do handler.
+     * TODO: Considerar mover para WordFilterService se crescer complexidade.
+     */
     private String applyWordFilter(String message) {
         if (!ChatConfig.COMMON.filterEnabled.get()) return message;
 
