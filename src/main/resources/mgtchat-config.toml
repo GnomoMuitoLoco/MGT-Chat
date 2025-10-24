@@ -7,12 +7,12 @@
 debug = false
 
 # Formato do chat global
-# Placeholders: {prefix}, {player}, {message_color}, {message}
-globalFormat = "&8[&3g&8] &r{prefix} &r{player}&f: {message_color}{message}"
+# Placeholders: {prefix} (LuckPerms), {player}, {message_color}, {message}
+globalFormat = "&8[&3g&8] &r{prefix}&r{player}&f: {message_color}{message}"
 
 # Formato do chat local
-# Placeholders: {prefix}, {player}, {message_color}, {message}
-localFormat = "&8[&el&8] &r{prefix} &r{player}&f: {message_color}{message}"
+# Placeholders: {prefix} (LuckPerms), {player}, {message_color}, {message}
+localFormat = "&8[&el&8] &r{prefix}&r{player}&f: {message_color}{message}"
 
 # Cor aplicada às mensagens globais
 globalMessageColor = "&3"
@@ -53,13 +53,6 @@ blockedWords = [
 # Mensagem substituta quando palavra bloqueada for detectada
 replacement = "***"
 
-[ftbRanks]
-# Ativar integração com FTB Ranks para prefixos
-usePrefixes = true
-
-# Formato da mensagem com prefixo
-# Placeholders: {prefix}, {player}, {message}
-format = "{prefix} {player}: {message}"
 
 [private]
 # Placeholders: {send_player}, {receive_player}, {message}

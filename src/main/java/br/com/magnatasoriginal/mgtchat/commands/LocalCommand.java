@@ -57,10 +57,22 @@ public class LocalCommand {
      * Envia mensagem no chat local usando services.
      *
      * WHY: Delegado aos services para evitar duplicação com ChatEventHandler.
+     * NOTE: Fires MGTChatMessageEvent for Discord relay integration.
      */
     private static void sendLocalMessage(ServerPlayer sender, String msg) {
         int range = ChatConfig.COMMON.localRange.get();
         Component formatted = MGTChat.getChatFormatterService().formatLocalMessage(sender, msg);
+
+        // WHY: Fire custom event for Discord relay integration
+        br.com.magnatasoriginal.mgtchat.events.MGTChatMessageEvent chatEvent =
+            new br.com.magnatasoriginal.mgtchat.events.MGTChatMessageEvent(
+                sender, msg, formatted, br.com.magnatasoriginal.mgtchat.events.MGTChatMessageEvent.Channel.LOCAL
+            );
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(chatEvent);
+
+        if (chatEvent.isCanceled()) {
+            return; // Another mod canceled the message
+        }
 
         int recipientCount = MGTChat.getMessageBroadcaster().broadcastLocal(sender, formatted, range, true);
 

@@ -55,9 +55,21 @@ public class GlobalCommand {
      * Envia mensagem no chat global usando services.
      *
      * WHY: Delegado aos services para evitar duplicação com ChatEventHandler.
+     * NOTE: Fires MGTChatMessageEvent to ensure Discord relay works for /g <message>.
      */
     public static void sendGlobalMessage(ServerPlayer sender, String msg) {
         Component formatted = MGTChat.getChatFormatterService().formatGlobalMessage(sender, msg);
+
+        // WHY: Fire custom event for Discord relay integration (fixes bug where /g doesn't relay)
+        br.com.magnatasoriginal.mgtchat.events.MGTChatMessageEvent chatEvent =
+            new br.com.magnatasoriginal.mgtchat.events.MGTChatMessageEvent(
+                sender, msg, formatted, br.com.magnatasoriginal.mgtchat.events.MGTChatMessageEvent.Channel.GLOBAL
+            );
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(chatEvent);
+
+        if (chatEvent.isCanceled()) {
+            return; // Another mod canceled the message
+        }
 
         int recipientCount = MGTChat.getMessageBroadcaster().broadcastGlobal(sender, formatted);
 

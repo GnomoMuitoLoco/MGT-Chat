@@ -49,10 +49,6 @@ public class ChatConfig {
         public final ModConfigSpec.ConfigValue<List<? extends String>> blockedCommands;
         public final ModConfigSpec.ConfigValue<String> blockedCommandMessage;
 
-        // FTB Ranks
-        public final ModConfigSpec.BooleanValue usePrefixes;
-        public final ModConfigSpec.ConfigValue<String> format;
-
         Common(ModConfigSpec.Builder builder) {
             builder.push("general");
 
@@ -60,11 +56,12 @@ public class ChatConfig {
                     .define("debug", false);
 
             // Formatos por canal com cor apenas na mensagem
-            globalFormat = builder.comment("Formato do chat global. Placeholders: {prefix}, {player}, {message_color}, {message}")
-                    .define("globalFormat", "&8[&3g&8] &r{prefix} &r{player}&f: {message_color}{message}");
+            // NOTE: {prefix} is resolved via LuckPerms integration when available
+            globalFormat = builder.comment("Formato do chat global. Placeholders: {prefix} (LuckPerms), {player}, {message_color}, {message}")
+                    .define("globalFormat", "&8[&3g&8] &r{prefix}&r{player}&f: {message_color}{message}");
 
-            localFormat = builder.comment("Formato do chat local. Placeholders: {prefix}, {player}, {message_color}, {message}")
-                    .define("localFormat", "&8[&el&8] &r{prefix} &r{player}&f: {message_color}{message}");
+            localFormat = builder.comment("Formato do chat local. Placeholders: {prefix} (LuckPerms), {player}, {message_color}, {message}")
+                    .define("localFormat", "&8[&el&8] &r{prefix}&r{player}&f: {message_color}{message}");
 
             globalMessageColor = builder.comment("Cor aplicada às mensagens globais")
                     .define("globalMessageColor", "&3");
@@ -149,15 +146,6 @@ public class ChatConfig {
             blockedCommandMessage = builder.comment("Mensagem exibida quando um comando bloqueado é usado")
                     .define("blockedCommandMessage", "&cComando não encontrado");
 
-            builder.pop();
-
-            builder.push("ftbRanks");
-
-            usePrefixes = builder.comment("Ativar integração com FTB Ranks")
-                    .define("usePrefixes", true);
-
-            format = builder.comment("Formato da mensagem com prefixo. Placeholders: {prefix}, {player}, {message}")
-                    .define("format", "{prefix} {player}: {message}");
 
             builder.pop();
         }

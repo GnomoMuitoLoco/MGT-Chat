@@ -80,9 +80,6 @@ public class MGTChat {
 
         // WHY: Registrar handler para espionar comandos executados
         NeoForge.EVENT_BUS.register(new br.com.magnatasoriginal.mgtchat.events.CommandSpyHandler());
-
-        // TODO: Desabilitar PrefixHandler por enquanto (conflita com ChatEventHandler)
-        // NeoForge.EVENT_BUS.register(new PrefixHandler());
     }
 
     /**
@@ -152,6 +149,7 @@ public class MGTChat {
         br.com.magnatasoriginal.mgtchat.commands.admin.ClearChatCommand.register(dispatcher);
         br.com.magnatasoriginal.mgtchat.commands.admin.ChatSpyCommand.register(dispatcher);
         br.com.magnatasoriginal.mgtchat.commands.admin.ReloadCommand.register(dispatcher);
+        br.com.magnatasoriginal.mgtchat.commands.admin.MGTChatReloadCommand.register(dispatcher);
         // New admin commands for block/unblock
         br.com.magnatasoriginal.mgtchat.commands.admin.BlockCommand.register(dispatcher);
         br.com.magnatasoriginal.mgtchat.commands.admin.UnblockCommand.register(dispatcher);

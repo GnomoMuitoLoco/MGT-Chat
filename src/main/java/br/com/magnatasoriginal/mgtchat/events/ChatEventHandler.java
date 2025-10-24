@@ -97,9 +97,21 @@ public class ChatEventHandler {
      * Processa mensagem do chat global.
      *
      * WHY: Separado em método privado para clareza.
+     * NOTE: Fires MGTChatMessageEvent for Discord integration compatibility.
      */
     private void handleGlobalChat(ServerPlayer sender, String message) {
         Component formatted = formatterService.formatGlobalMessage(sender, message);
+
+        // WHY: Fire custom event for Discord relay integration
+        MGTChatMessageEvent chatEvent = new MGTChatMessageEvent(
+            sender, message, formatted, MGTChatMessageEvent.Channel.GLOBAL
+        );
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(chatEvent);
+
+        if (chatEvent.isCanceled()) {
+            return; // Another mod canceled the message
+        }
+
         int recipientCount = broadcaster.broadcastGlobal(sender, formatted);
 
         // WHY: Log estruturado para auditoria
@@ -114,10 +126,21 @@ public class ChatEventHandler {
      * Processa mensagem do chat local.
      *
      * WHY: Separado em método privado + adiciona aviso se ninguém recebeu.
+     * NOTE: Fires MGTChatMessageEvent for Discord integration compatibility.
      */
     private void handleLocalChat(ServerPlayer sender, String message) {
         int range = ChatConfig.COMMON.localRange.get();
         Component formatted = formatterService.formatLocalMessage(sender, message);
+
+        // WHY: Fire custom event for Discord relay integration
+        MGTChatMessageEvent chatEvent = new MGTChatMessageEvent(
+            sender, message, formatted, MGTChatMessageEvent.Channel.LOCAL
+        );
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(chatEvent);
+
+        if (chatEvent.isCanceled()) {
+            return; // Another mod canceled the message
+        }
 
         // ALWAYS show the message to the sender so they see what they sent
         sender.sendSystemMessage(formatted);

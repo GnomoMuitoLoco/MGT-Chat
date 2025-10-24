@@ -79,6 +79,7 @@ configurations {
 dependencies {
     // 🔑 Agora o Chat vai puxar o Core do Maven Local
     implementation "br.com.magnatasoriginal.mgtcore:mgtcore:1.0.1-SNAPSHOT"
+    compileOnly 'net.luckperms:api:5.4'
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

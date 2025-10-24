@@ -5,7 +5,7 @@ import net.minecraft.server.level.ServerPlayer;
 /**
  * Serviço de verificação de permissões administrativas.
  *
- * WHY: Suporta múltiplas fontes de permissão (FTB Ranks, OP, ambos)
+ * WHY: Suporta múltiplas fontes de permissão (LuckPerms, OP, ambos)
  * conforme configuração do servidor.
  *
  * @since 1.1.0
@@ -17,11 +17,11 @@ public class PermissionService {
      */
     public enum PermissionProvider {
         OP_ONLY,      // Apenas operadores
-        FTBRANKS,     // Apenas FTB Ranks
-        BOTH          // OP ou FTB Ranks
+        LUCKPERMS,    // Apenas LuckPerms
+        BOTH          // OP ou LuckPerms
     }
 
-    // Default para BOTH: usa FTB Ranks se presente OU fallback para OP
+    // Default para BOTH: usa LuckPerms se presente OU fallback para OP
     private PermissionProvider provider = PermissionProvider.BOTH;
 
     /**
@@ -47,11 +47,11 @@ public class PermissionService {
             case OP_ONLY:
                 return hasOpPermission(player);
 
-            case FTBRANKS:
-                return hasFtbRanksPermission(player, permission);
+            case LUCKPERMS:
+                return hasLuckPermsPermission(player, permission);
 
             case BOTH:
-                return hasOpPermission(player) || hasFtbRanksPermission(player, permission);
+                return hasOpPermission(player) || hasLuckPermsPermission(player, permission);
 
             default:
                 return false;
@@ -68,14 +68,14 @@ public class PermissionService {
     }
 
     /**
-     * Verifica permissão via FTB Ranks.
+     * Verifica permissão via LuckPerms.
      *
-     * WHY: Integração segura via reflexão quando FTB Ranks está presente.
+     * WHY: Integração segura via LuckPerms API quando LuckPerms está presente.
      */
-    private boolean hasFtbRanksPermission(ServerPlayer player, String permission) {
-        if (!br.com.magnatasoriginal.mgtchat.integration.FtbRanksIntegration.isLoaded()) return false;
+    private boolean hasLuckPermsPermission(ServerPlayer player, String permission) {
+        if (!br.com.magnatasoriginal.mgtchat.integration.LuckPermsIntegration.isLoaded()) return false;
         try {
-            return br.com.magnatasoriginal.mgtchat.integration.FtbRanksIntegration.hasPermission(player, permission);
+            return br.com.magnatasoriginal.mgtchat.integration.LuckPermsIntegration.hasPermission(player, permission);
         } catch (Throwable t) {
             // Qualquer falha na integração retorna false e cai no fallback quando provider=BOTH
             return false;

@@ -98,33 +98,38 @@ public class ChatFormatterService {
     }
 
     /**
-     * Obtém o prefixo do jogador (via FTB Ranks ou fallback vazio).
+     * Obtém o prefixo do jogador (via LuckPerms ou fallback vazio).
      *
-     * WHY: Integração futura com FTB Ranks. Por enquanto retorna vazio,
-     * mas preparado para extensão sem quebrar código existente.
+     * WHY: Integração com LuckPerms para resolução de prefixos.
+     * Retorna string vazia se LuckPerms não estiver disponível.
      *
-     * TODO: Implementar integração real com FTB Ranks quando disponível.
+     * @param player Jogador
+     * @return Prefixo do jogador (pode conter códigos de cor)
      */
     private String getPlayerPrefix(ServerPlayer player) {
-        // TODO: Integrar com FTB Ranks
-        // if (FtbRanksIntegration.isLoaded()) {
-        //     return FtbRanksIntegration.getPrefix(player);
-        // }
+        if (br.com.magnatasoriginal.mgtchat.integration.LuckPermsIntegration.isLoaded()) {
+            String prefix = br.com.magnatasoriginal.mgtchat.integration.LuckPermsIntegration.getPrefix(player);
+            // NOTE: Remove trailing space if prefix exists to prevent double spaces
+            return prefix.isEmpty() ? "" : prefix + " ";
+        }
         return "";
     }
 
     /**
-     * Obtém o sufixo do jogador (via FTB Ranks ou fallback vazio).
+     * Obtém o sufixo do jogador (via LuckPerms ou fallback vazio).
      *
-     * WHY: Preparado para integração futura com FTB Ranks.
+     * WHY: Integração com LuckPerms para resolução de sufixos.
+     * Retorna string vazia se LuckPerms não estiver disponível.
      *
-     * TODO: Implementar integração real com FTB Ranks quando disponível.
+     * @param player Jogador
+     * @return Sufixo do jogador (pode conter códigos de cor)
      */
     private String getPlayerSuffix(ServerPlayer player) {
-        // TODO: Integrar com FTB Ranks
-        // if (FtbRanksIntegration.isLoaded()) {
-        //     return FtbRanksIntegration.getSuffix(player);
-        // }
+        if (br.com.magnatasoriginal.mgtchat.integration.LuckPermsIntegration.isLoaded()) {
+            String suffix = br.com.magnatasoriginal.mgtchat.integration.LuckPermsIntegration.getSuffix(player);
+            // NOTE: Add leading space if suffix exists
+            return suffix.isEmpty() ? "" : " " + suffix;
+        }
         return "";
     }
 }
